@@ -165,6 +165,9 @@ public class ExportPoiToSql {
                 if (file.getName().endsWith(".shp")){
                     flag = false;
                     // 提交导出任务
+                    if (FileUtil.size(ExportPoiToSql.sqlFile) > ExportPoiToSql.sqlFileSize){ // 判断文件大小是否超出
+                        ExportPoiToSql.sqlFile = FileUtil.file(ExportPoiToSql.sqlFile.getPath().replaceAll("-"+(ExportPoiToSql.sqlFileCount-1)+".sql","-"+ExportPoiToSql.sqlFileCount+++".sql"));
+                    }
                     Future<String> future = completionService.submit(new ExportPoiTask(tableName, tableFields, gridFields, file.getPath()));
                     futures.add(future);
                 }
