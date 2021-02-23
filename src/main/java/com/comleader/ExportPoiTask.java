@@ -55,13 +55,19 @@ public class ExportPoiTask implements Callable<String> {
             //System.out.println(feature.getAttribute("side"));
             //System.out.println(feature.getAttribute("address"));
             //System.out.println(feature.getAttribute("geom"));
-            sql.append("insert into "+tableName+"("+field1+")values(");
+            sql.append("insert into " + tableName + "(" + field1 + ")values(");
+            if (!"POINT".equalsIgnoreCase(feature.getDefaultGeometryProperty().getType().toString())){ // 如果不是某个点的poi，则跳过
+                continue;
+            }
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
-                if (i == gridFields.size() - 1){
-                    sql.append("\""+ feature.getAttribute(fieldName)+"\");\n");
-                }else {
-                    sql.append("\""+ feature.getAttribute(fieldName)+"\",");
+                if (feature.getAttribute(fieldName) != null || String.valueOf(feature.getAttribute(fieldName)).contains("'")) { // 去除掉列中的特殊字符
+                    feature.setAttribute(fieldName,feature.getAttribute(fieldName).toString().replaceAll("'", " "));
+                }
+                if (i == gridFields.size() - 1) {
+                    sql.append("'" + feature.getAttribute(fieldName) + "');\n");
+                } else {
+                    sql.append("'" + feature.getAttribute(fieldName) + "',");
                 }
             }
             synchronized (ExportPoiTask.class){

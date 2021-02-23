@@ -179,6 +179,9 @@ public class ExportPoiToSql {
             }
         }
 
+        // 开始执行后监测文件大小，超出了就新建文件
+
+
         //File sqlFile = new File(saveSqlFilePath);
         //File parentFile = sqlFile.getParentFile();
         //if (!parentFile.exists() ||  !parentFile.isDirectory()){ // 如果父目录不存在，创建出来
