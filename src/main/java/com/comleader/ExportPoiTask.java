@@ -33,15 +33,15 @@ public class ExportPoiTask implements Callable<String> {
 
     @Override
     public String call() throws Exception {
-        System.out.println(shpFileaPath+" 》》》生成SQL 》》》 Start");
+        System.out.println(shpFileaPath + " 》》》生成SQL 》》》 Start");
         StringBuffer field = new StringBuffer();
-        tableField.stream().forEach(s -> field.append(s+","));
-        String field1 = field.substring(0, field.length()-1);
-        ShapefileDataStore sds = (ShapefileDataStore)new ShapefileDataStoreFactory().createDataStore(FileUtil.file(new File(shpFileaPath)).toURI().toURL());
+        tableField.stream().forEach(s -> field.append(s + ","));
+        String field1 = field.substring(0, field.length() - 1);
+        ShapefileDataStore sds = (ShapefileDataStore) new ShapefileDataStoreFactory().createDataStore(FileUtil.file(new File(shpFileaPath)).toURI().toURL());
         sds.setCharset(Charset.forName(ExportPoiToSql.SHP_ENCODEING));
         SimpleFeatureIterator itertor = sds.getFeatureSource().getFeatures().features();
         StringBuffer sql = new StringBuffer();
-        while(itertor.hasNext()){
+        while (itertor.hasNext()) {
             SimpleFeature feature = itertor.next();
             System.out.println(feature.getAttributes());
             //System.out.println(feature.getAttribute("gml_id"));
@@ -55,26 +55,23 @@ public class ExportPoiTask implements Callable<String> {
             //System.out.println(feature.getAttribute("side"));
             //System.out.println(feature.getAttribute("address"));
             //System.out.println(feature.getAttribute("geom"));
-            sql.append("insert into "+tableName+"("+field1+")values(");
+            sql.append("insert into " + tableName + "(" + field1 + ")values(");
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
-                Object attribute = feature.getAttribute(fieldName);
-                if (attribute != null || attribute.toString().contains("'")){ // 去除掉列中的特殊字符
-                    attribute = attribute.toString().replaceAll("'"," ");
+                if (feature.getAttribute(fieldName) != null || String.valueOf(feature.getAttribute(fieldName)).contains("'")) { // 去除掉列中的特殊字符
+                    feature.setAttribute(fieldName,feature.getAttribute(fieldName).toString().replaceAll("'", " "));
                 }
-                if (i == gridFields.size() - 1){
-                    sql.append("'"+ attribute+"');\n");
-                }else {
-                    sql.append("'"+ attribute+"',");
+                if (i == gridFields.size() - 1) {
+                    sql.append("'" + feature.getAttribute(fieldName) + "');\n");
+                } else {
+                    sql.append("'" + feature.getAttribute(fieldName) + "',");
                 }
             }
-            synchronized (ExportPoiTask.class){
-                ExportPoiToSql.total++;
-            }
+            ExportPoiToSql.total++;
         }
         //itertor.close();
-        FileUtil.appendString(sql.toString(),ExportPoiToSql.sqlFile,ExportPoiToSql.SQL_ENCODEING);
-        System.out.println(shpFileaPath+" 》》》生成SQL 》》》Success");
+        FileUtil.appendString(sql.toString(), ExportPoiToSql.sqlFile, ExportPoiToSql.SQL_ENCODEING);
+        System.out.println(shpFileaPath + " 》》》生成SQL 》》》Success");
         return sql.toString();
     }
 }
