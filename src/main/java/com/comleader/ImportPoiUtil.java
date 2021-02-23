@@ -6,6 +6,8 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.locationtech.jts.geom.Point;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.type.GeometryType;
+import org.opengis.feature.type.Name;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +29,7 @@ public class ImportPoiUtil {
         String tableName="routinemonitor.t_bas_grid_layer";
         List<String> grid_fields = Arrays.asList("the_geom", "gd_code", "region");
         List<Integer> grid_fields_location = Arrays.asList(0, 1, 2);
-        String shpFilePath="E:\\信大网御\\互联网业务部\\离线地图\\POI导入\\canyin.shp";
+        String shpFilePath="E:\\信大网御\\互联网业务部\\离线地图\\POI导入\\demo\\canyin.shp";
         String sqlFileName="上海市矢量数据_出入口";
 
         ImportPoiUtil.shpConvertSql(tableName, grid_fields, grid_fields_location, shpFilePath, sqlFileName);
@@ -69,6 +71,13 @@ public class ImportPoiUtil {
             System.out.println("side:"+feature.getAttribute("side"));
             System.out.println("address:"+feature.getAttribute("address"));
             System.out.println("the_geom:"+feature.getAttribute("the_geom")+"\n\n");
+            String s1 = String.valueOf(feature.getAttribute("the_geom"));
+            GeometryType type = feature.getDefaultGeometryProperty().getType();
+            Name name = type.getName();
+            String localPart = name.getLocalPart();
+            boolean b = "Point".equalsIgnoreCase(localPart);
+            int point = type.toString().indexOf("Point");
+            System.out.println(feature.getDefaultGeometryProperty().getType().toString());
             sql.append("insert into "+tableName+"("+field.substring(0, field.length()-1)+")values(");
             for (Integer integer : fieldLocation) {
 
