@@ -96,6 +96,12 @@ public class ExportPoiToSql {
             CHAR_ENCODEING = code;
         }
 
+        System.out.println("线程数量（默认20）：");
+        threadNum = scanner.nextInt();
+        if (threadNum == 0){
+            threadNum = 20;
+        }
+
         // 开始导出sql[shp文件路径(文件绝对路径或者目录)，表名称，文件解析列，表列，sql保存绝对路径,文件编码]
         ExportPoiToSql.shpConvertSql(shpFilePath,tableName,grid_fields,table_fields,saveSqlFilePath,CHAR_ENCODEING);
     }
