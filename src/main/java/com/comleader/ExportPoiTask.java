@@ -43,22 +43,11 @@ public class ExportPoiTask implements Callable<String> {
         StringBuffer sql = new StringBuffer();
         while (itertor.hasNext()) {
             SimpleFeature feature = itertor.next();
-            System.out.println(feature.getAttributes());
-            //System.out.println(feature.getAttribute("gml_id"));
-            //System.out.println(feature.getAttribute("Name"));
-            //System.out.println(feature.getAttribute("pyname"));
-            //System.out.println(feature.getAttribute("kind"));
-            //System.out.println(feature.getAttribute("zipcode"));
-            //System.out.println(feature.getAttribute("telephone"));
-            //System.out.println(feature.getAttribute("display_x"));
-            //System.out.println(feature.getAttribute("display_y"));
-            //System.out.println(feature.getAttribute("side"));
-            //System.out.println(feature.getAttribute("address"));
-            //System.out.println(feature.getAttribute("geom"));
-            sql.append("insert into " + tableName + "(" + field1 + ")values(");
-            if (!"POINT".equalsIgnoreCase(feature.getDefaultGeometryProperty().getType().toString())){ // 如果不是某个点的poi，则跳过
+            if (!"Point".equalsIgnoreCase(feature.getDefaultGeometryProperty().getType().getName().getLocalPart())){ // 如果不是某个点的poi，则跳过
                 continue;
             }
+            System.out.println(feature.getAttributes());
+            sql.append("insert into " + tableName + "(" + field1 + ")values(");
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
                 if (feature.getAttribute(fieldName) != null || String.valueOf(feature.getAttribute(fieldName)).contains("'")) { // 去除掉列中的特殊字符

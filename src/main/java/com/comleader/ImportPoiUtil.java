@@ -6,6 +6,8 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.locationtech.jts.geom.Point;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.type.GeometryType;
+import org.opengis.feature.type.Name;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +71,13 @@ public class ImportPoiUtil {
             System.out.println("side:"+feature.getAttribute("side"));
             System.out.println("address:"+feature.getAttribute("address"));
             System.out.println("the_geom:"+feature.getAttribute("the_geom")+"\n\n");
-            System.out.println(feature.getDefaultGeometryProperty().getType());
+            String s1 = String.valueOf(feature.getAttribute("the_geom"));
+            GeometryType type = feature.getDefaultGeometryProperty().getType();
+            Name name = type.getName();
+            String localPart = name.getLocalPart();
+            boolean b = "Point".equalsIgnoreCase(localPart);
+            int point = type.toString().indexOf("Point");
+            System.out.println(feature.getDefaultGeometryProperty().getType().toString());
             sql.append("insert into "+tableName+"("+field.substring(0, field.length()-1)+")values(");
             for (Integer integer : fieldLocation) {
 
