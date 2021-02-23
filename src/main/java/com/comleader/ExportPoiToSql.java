@@ -20,7 +20,7 @@ import java.util.concurrent.*;
  * @Author: Daisen.Z
  * @Date: 2021/2/23 9:51
  * @Version: 1.0
- * @Description:
+ * @Description: 主类
  */
 public class ExportPoiToSql {
 
@@ -40,6 +40,9 @@ public class ExportPoiToSql {
     public static long sqlFileSize = 100 * 1024 * 1024;
 
     public static boolean splitFlag = false;
+
+
+    // 工具的入口函数
     public static void main(String[] args) throws Exception {
         System.out.println("功能简介：将shp文件格式的poi数据导出为sql语句");
 
@@ -96,13 +99,13 @@ public class ExportPoiToSql {
             SHP_ENCODEING = code;
         }
 
-        System.out.println("输出sql文件编码（默认UTF-8）：");
+        System.out.println("输出sql文件编码（默认GBK）：");
         String sqlCode = scanner.nextLine();
         if (StringUtils.isNoneEmpty(sqlCode)){
             SQL_ENCODEING = code;
         }
 
-        System.out.println("线程数量（默认20）：");
+        System.out.println("线程数量（默认50）：");
         String threadNumberStr = scanner.nextLine();
         if (StringUtils.isEmpty(threadNumberStr)){
             threadNum = 20;
