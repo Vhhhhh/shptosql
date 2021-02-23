@@ -58,10 +58,14 @@ public class ExportPoiTask implements Callable<String> {
             sql.append("insert into "+tableName+"("+field1+")values(");
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
+                Object attribute = feature.getAttribute(fieldName);
+                if (attribute != null || attribute.toString().contains("'")){ // 去除掉列中的特殊字符
+                    attribute = attribute.toString().replaceAll("'"," ");
+                }
                 if (i == gridFields.size() - 1){
-                    sql.append("\""+ feature.getAttribute(fieldName)+"\");\n");
+                    sql.append("'"+ attribute+"');\n");
                 }else {
-                    sql.append("\""+ feature.getAttribute(fieldName)+"\",");
+                    sql.append("'"+ attribute+"',");
                 }
             }
             synchronized (ExportPoiTask.class){
