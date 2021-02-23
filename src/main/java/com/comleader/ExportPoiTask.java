@@ -59,9 +59,9 @@ public class ExportPoiTask implements Callable<String> {
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
                 if (i == gridFields.size() - 1){
-                    sql.append("'"+ feature.getAttribute(fieldName)+"');\n");
+                    sql.append("\""+ feature.getAttribute(fieldName)+"\");\n");
                 }else {
-                    sql.append("'"+ feature.getAttribute(fieldName)+"',");
+                    sql.append("\""+ feature.getAttribute(fieldName)+"\",");
                 }
             }
             synchronized (ExportPoiTask.class){
