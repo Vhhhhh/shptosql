@@ -13,10 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -42,8 +39,7 @@ public class ExportPoiToSql {
 
     public static long sqlFileSize = 100 * 1024 * 1024;
 
-    public static volatile int sqlFileCount = 0;
-
+    public static boolean splitFlag = false;
     public static void main(String[] args) throws Exception {
         System.out.println("功能简介：将shp文件格式的poi数据导出为sql语句");
 
@@ -84,7 +80,7 @@ public class ExportPoiToSql {
         String saveSqlFilePath= scanner.nextLine();
         // 拼接sql文件名称
         LocalDateTime now = LocalDateTimeUtil.now();
-        String sqlFileName = now.getYear()+""+now.getMonthValue()+""+now.getDayOfMonth()+""+now.getHour()+""+now.getMinute()+"-"+sqlFileCount+++".sql";
+        String sqlFileName = now.getYear()+""+now.getMonthValue()+""+now.getDayOfMonth()+""+now.getHour()+""+now.getMinute()+".sql";
         if (StringUtils.isEmpty(saveSqlFilePath)){
             File file = new File(shpFilePath);
             if (file.isDirectory()){
@@ -114,14 +110,6 @@ public class ExportPoiToSql {
             threadNum = Integer.valueOf(threadNumberStr);
         }
 
-        System.out.println("生成每个文件的大小（单位M,默认100）：");
-        String sqlFileSizeStr = scanner.nextLine();
-        if (StringUtils.isEmpty(sqlFileSizeStr)){
-            sqlFileSize = 100 * 1024 * 1024;
-        }else {
-            sqlFileSize = Long.valueOf(sqlFileSizeStr) * 1024 * 1024;
-        }
-
         // 开始导出sql[shp文件路径(文件绝对路径或者目录)，表名称，文件解析列，表列，sql保存绝对路径,文件编码]
         ExportPoiToSql.shpConvertSql(shpFilePath,tableName,grid_fields,table_fields,saveSqlFilePath,SHP_ENCODEING);
     }
@@ -139,6 +127,45 @@ public class ExportPoiToSql {
         long startTime = System.currentTimeMillis();
 
         // 导出sql文件
+        List<Future<String>> futures = exportSql(shpFilePath, tableName, gridFields, tableFields, saveSqlFilePath);
+
+        // 显示结果
+        long endTime = System.currentTimeMillis();
+        StringBuilder result = new StringBuilder();
+        result.append("导出成功!\n");
+        result.append("总用时："+TypeFormatUtil.toDuration(endTime - startTime));
+        result.append("\n文件总大小："+FileUtil.readableFileSize(sqlFile));
+        result.append("\n总条数："+TypeFormatUtil.intToUnit(total)+"条");
+        System.out.println(result.toString());
+        System.out.println("-----------------------------------------------------------------");
+
+        // 是否拆分文件
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("是否拆分成多个小文件（y/n）,默认不拆分：");
+        String splitFlagStr = scanner.nextLine();
+        if ("y".equalsIgnoreCase(splitFlagStr)){
+            splitFlag = true;
+        }
+
+        if (splitFlag){
+            System.out.println("生成每个文件的大小（单位M,默认100）：");
+            String sqlFileSizeStr = scanner.nextLine();
+            if (StringUtils.isEmpty(sqlFileSizeStr)){
+                sqlFileSize = 100 * 1024 * 1024;
+            }else {
+                sqlFileSize = Long.valueOf(sqlFileSizeStr) * 1024 * 1024;
+            }
+        }
+        if (splitFlag){ // 将多个大文件拆分成小文件
+            bigFileToSmallFile(futures);
+            System.out.println("拆分完成！");
+        }
+
+        System.exit(0);
+    }
+
+    // 将shp文件转换为sql文件
+    private static List<Future<String>> exportSql(String shpFilePath, String tableName, List<String> gridFields, List<String> tableFields, String saveSqlFilePath) throws InterruptedException, ExecutionException {
         sqlFile = FileUtil.file(saveSqlFilePath);
         es = Executors.newFixedThreadPool(threadNum);
         completionService = new ExecutorCompletionService<>(es);
@@ -165,9 +192,6 @@ public class ExportPoiToSql {
                 if (file.getName().endsWith(".shp")){
                     flag = false;
                     // 提交导出任务
-                    if (FileUtil.size(ExportPoiToSql.sqlFile) > ExportPoiToSql.sqlFileSize){ // 判断文件大小是否超出
-                        ExportPoiToSql.sqlFile = FileUtil.file(ExportPoiToSql.sqlFile.getPath().replaceAll("-"+(ExportPoiToSql.sqlFileCount-1)+".sql","-"+ExportPoiToSql.sqlFileCount+++".sql"));
-                    }
                     Future<String> future = completionService.submit(new ExportPoiTask(tableName, tableFields, gridFields, file.getPath()));
                     futures.add(future);
                 }
@@ -178,28 +202,47 @@ public class ExportPoiToSql {
                 System.exit(0);
             }
         }
-
-        // 开始执行后监测文件大小，超出了就新建文件
-
-
-        //File sqlFile = new File(saveSqlFilePath);
-        //File parentFile = sqlFile.getParentFile();
-        //if (!parentFile.exists() ||  !parentFile.isDirectory()){ // 如果父目录不存在，创建出来
-        //    parentFile.mkdirs();
-        //}
         for (Future<String> future : futures) {
             future.get();
         }
+        return futures;
+    }
 
-        // 显示结果
-        long endTime = System.currentTimeMillis();
-        StringBuilder result = new StringBuilder();
-        result.append("导出成功!\n");
-        result.append("总用时："+TypeFormatUtil.toDuration(endTime - startTime));
-        result.append("\n文件大小："+FileUtil.readableFileSize(sqlFile));
-        result.append("\n总条数："+TypeFormatUtil.intToUnit(total)+"条");
-        System.out.println(result.toString());
-        System.exit(0);
+
+    // 将生成一个大文件转换成多个小文件
+    private static void bigFileToSmallFile(List<Future<String>> futures) throws InterruptedException, ExecutionException {
+        // 拆分文件
+        futures.clear();
+        List<String> strings = FileUtil.readLines(sqlFile, SQL_ENCODEING);
+        long size = FileUtil.size(sqlFile);
+        // 拆分成多个文件,算出每个文件多少条
+        long sqlFileTotal = 0;
+        if (size > sqlFileSize){
+            if (size % sqlFileSize == 0){
+                sqlFileTotal = size / sqlFileSize;
+            }else {
+                sqlFileTotal = size / sqlFileSize;
+                sqlFileTotal ++;
+            }
+        }
+        // 算出每个文件多少条
+        long oneFileDataTotal = total / sqlFileTotal;
+        // 开始分批写入文件
+        for (long i = 0; i < sqlFileTotal; i++) {
+            String filePath = sqlFile.getPath().replaceAll(".sql","-"+i+".sql");
+            int startIndex = (int) (i * oneFileDataTotal);
+            List<String> oneFileContent = null;
+            if (i == sqlFileTotal - 1){ // 如果是最后一个文件，直接插入到最后
+                oneFileContent = strings.subList(startIndex,strings.size());
+            }else {
+                oneFileContent = strings.subList(startIndex, (int) ((i+1) * oneFileDataTotal));
+            }
+            Future<String> submit = completionService.submit(new WriteFileTask(oneFileContent, filePath));
+            futures.add(submit);
+        }
+        for (Future<String> future : futures) {
+            future.get();
+        }
     }
 
 
