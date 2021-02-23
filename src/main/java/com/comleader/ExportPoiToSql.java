@@ -104,9 +104,11 @@ public class ExportPoiToSql {
         }
 
         System.out.println("线程数量（默认20）：");
-        threadNum = scanner.nextInt();
-        if (threadNum == 0){
+        String threadNumberStr = scanner.nextLine();
+        if (StringUtils.isEmpty(threadNumberStr)){
             threadNum = 20;
+        }else {
+            threadNum = Integer.valueOf(threadNumberStr);
         }
 
         // 开始导出sql[shp文件路径(文件绝对路径或者目录)，表名称，文件解析列，表列，sql保存绝对路径,文件编码]
