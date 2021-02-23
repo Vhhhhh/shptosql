@@ -33,7 +33,7 @@ public class ExportPoiToSql {
 
     private static CompletionService<String> completionService;
 
-    private static int threadNum = 20; // 线程池个数
+    private static int threadNum = 50; // 线程池个数
 
     public static volatile File sqlFile = null;
 

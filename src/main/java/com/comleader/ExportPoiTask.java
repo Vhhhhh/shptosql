@@ -43,13 +43,15 @@ public class ExportPoiTask implements Callable<String> {
         StringBuffer sql = new StringBuffer();
         while (itertor.hasNext()) {
             SimpleFeature feature = itertor.next();
-            //if (!"Point".equalsIgnoreCase(feature.getDefaultGeometryProperty().getType().getName().getLocalPart())){ // 如果不是某个点的poi，则跳过
-            //    continue;
-            //}
+            // TODO： 以下是是否只要点的，像搜索郑州市、周口市等这些区域性的过滤掉（如果需要可以将这个判断去掉）
+            if (!"Point".equalsIgnoreCase(feature.getDefaultGeometryProperty().getType().getName().getLocalPart())){ // 如果不是某个点的poi，则跳过
+                continue;
+            }
             System.out.println(feature.getAttributes());
             sql.append("insert into " + tableName + "(" + field1 + ")values(");
             for (int i = 0; i < gridFields.size(); i++) {
                 String fieldName = gridFields.get(i);
+                // 如果属性中含有"'"单引号，属于乱码，替换掉
                 if (feature.getAttribute(fieldName) != null || String.valueOf(feature.getAttribute(fieldName)).contains("'")) { // 去除掉列中的特殊字符
                     feature.setAttribute(fieldName,feature.getAttribute(fieldName).toString().replaceAll("'", " "));
                 }
