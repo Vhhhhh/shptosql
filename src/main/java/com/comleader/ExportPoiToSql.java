@@ -38,8 +38,11 @@ public class ExportPoiToSql {
 
     private static int threadNum = 20; // 线程池个数
 
-    public static File sqlFile = null;
+    public static volatile File sqlFile = null;
 
+    public static long sqlFileSize = 100 * 1024 * 1024;
+
+    public static volatile int sqlFileCount = 0;
 
     public static void main(String[] args) throws Exception {
         System.out.println("功能简介：将shp文件格式的poi数据导出为sql语句");
@@ -81,7 +84,7 @@ public class ExportPoiToSql {
         String saveSqlFilePath= scanner.nextLine();
         // 拼接sql文件名称
         LocalDateTime now = LocalDateTimeUtil.now();
-        String sqlFileName = now.getYear()+""+now.getMonthValue()+""+now.getDayOfMonth()+""+now.getHour()+""+now.getMinute()+".sql";
+        String sqlFileName = now.getYear()+""+now.getMonthValue()+""+now.getDayOfMonth()+""+now.getHour()+""+now.getMinute()+"-"+sqlFileCount+++".sql";
         if (StringUtils.isEmpty(saveSqlFilePath)){
             File file = new File(shpFilePath);
             if (file.isDirectory()){
@@ -109,6 +112,14 @@ public class ExportPoiToSql {
             threadNum = 20;
         }else {
             threadNum = Integer.valueOf(threadNumberStr);
+        }
+
+        System.out.println("生成每个文件的大小（单位M,默认100）：");
+        String sqlFileSizeStr = scanner.nextLine();
+        if (StringUtils.isEmpty(sqlFileSizeStr)){
+            sqlFileSize = 100 * 1024 * 1024;
+        }else {
+            sqlFileSize = Long.valueOf(sqlFileSizeStr) * 1024 * 1024;
         }
 
         // 开始导出sql[shp文件路径(文件绝对路径或者目录)，表名称，文件解析列，表列，sql保存绝对路径,文件编码]
@@ -146,7 +157,7 @@ public class ExportPoiToSql {
                 futures.add(future);
             }
 
-        }else { // 如果是文件目录导出,则递归目录下的所有shp文件
+        }else { // 如果是文件目录导出,则遍历目录下的所有shp文件
             File[] files = shpFile.listFiles();
             System.out.println("开始导出...");
             boolean flag = true; // 记录是否有文件导出

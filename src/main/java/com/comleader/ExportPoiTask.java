@@ -68,9 +68,13 @@ public class ExportPoiTask implements Callable<String> {
                 ExportPoiToSql.total++;
             }
         }
+        if (FileUtil.size(ExportPoiToSql.sqlFile) > ExportPoiToSql.sqlFileSize){
+            ExportPoiToSql.sqlFile = FileUtil.file(ExportPoiToSql.sqlFile.getPath().replaceAll("-"+(ExportPoiToSql.sqlFileCount-1)+".sql","-"+ExportPoiToSql.sqlFileCount+++".sql"));
+        }
         //itertor.close();
         FileUtil.appendString(sql.toString(),ExportPoiToSql.sqlFile,ExportPoiToSql.SQL_ENCODEING);
         System.out.println(shpFileaPath+" 》》》生成SQL 》》》Success");
         return sql.toString();
     }
+
 }
