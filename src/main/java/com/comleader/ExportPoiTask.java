@@ -38,7 +38,7 @@ public class ExportPoiTask implements Callable<String> {
         tableField.stream().forEach(s -> field.append(s+","));
         String field1 = field.substring(0, field.length()-1);
         ShapefileDataStore sds = (ShapefileDataStore)new ShapefileDataStoreFactory().createDataStore(FileUtil.file(new File(shpFileaPath)).toURI().toURL());
-        sds.setCharset(Charset.forName(ExportPoiToSql.CHAR_ENCODEING));
+        sds.setCharset(Charset.forName(ExportPoiToSql.SHP_ENCODEING));
         SimpleFeatureIterator itertor = sds.getFeatureSource().getFeatures().features();
         StringBuffer sql = new StringBuffer();
         while(itertor.hasNext()){
@@ -69,7 +69,7 @@ public class ExportPoiTask implements Callable<String> {
             }
         }
         //itertor.close();
-        FileUtil.appendString(sql.toString(),ExportPoiToSql.sqlFile,ExportPoiToSql.CHAR_ENCODEING);
+        FileUtil.appendString(sql.toString(),ExportPoiToSql.sqlFile,ExportPoiToSql.SQL_ENCODEING);
         System.out.println(shpFileaPath+" 》》》生成SQL 》》》Success");
         return sql.toString();
     }

@@ -29,7 +29,8 @@ public class ExportPoiToSql {
 
     public static volatile int total = 0;
 
-    public static String CHAR_ENCODEING="GBK";
+    public static String SHP_ENCODEING="GBK";
+    public static String SQL_ENCODEING="GBK";
     // 执行任务的线程池
     private static ExecutorService es;
 
@@ -90,10 +91,16 @@ public class ExportPoiToSql {
             }
         }
 
-        System.out.println("文件编码（默认GBK）：");
+        System.out.println("shp文件编码（默认GBK）：");
         String code = scanner.nextLine();
         if (StringUtils.isNoneEmpty(code)){
-            CHAR_ENCODEING = code;
+            SHP_ENCODEING = code;
+        }
+
+        System.out.println("输出sql文件编码（默认UTF-8）：");
+        String sqlCode = scanner.nextLine();
+        if (StringUtils.isNoneEmpty(sqlCode)){
+            SQL_ENCODEING = code;
         }
 
         System.out.println("线程数量（默认20）：");
@@ -103,7 +110,7 @@ public class ExportPoiToSql {
         }
 
         // 开始导出sql[shp文件路径(文件绝对路径或者目录)，表名称，文件解析列，表列，sql保存绝对路径,文件编码]
-        ExportPoiToSql.shpConvertSql(shpFilePath,tableName,grid_fields,table_fields,saveSqlFilePath,CHAR_ENCODEING);
+        ExportPoiToSql.shpConvertSql(shpFilePath,tableName,grid_fields,table_fields,saveSqlFilePath,SHP_ENCODEING);
     }
 
     /**
